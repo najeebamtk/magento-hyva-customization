@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!-- Home page: point the Hyvä demo sliders at this store's own categories -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <!-- Replace the Hyvä demo hero with our own -->
+        <referenceBlock name="hero" remove="true"/>
+        <referenceContainer name="content">
+            <block name="home.hero" template="Magento_Theme::home/hero.phtml" before="-">
+                <arguments>
+                    <!-- hero slides: add another <item> here to add a slide -->
+                    <argument name="slides" xsi:type="array">
+                        <item name="fashion" xsi:type="array">
+                            <item name="image" xsi:type="string">images/home-hero.jpeg</item>
+                            <item name="position" xsi:type="string">top</item>
+                            <item name="label" xsi:type="string">New Collection 2026</item>
+                            <item name="title" xsi:type="string">Men's Fashion</item>
+                            <item name="text" xsi:type="string">Shirts, shoes and accessories for every day.</item>
+                            <item name="button" xsi:type="string">Explore the Collection</item>
+                            <item name="link" xsi:type="string">shirt.html</item>
+                        </item>
+                        <item name="shoes" xsi:type="array">
+                            <item name="image" xsi:type="string">images/home-hero2.jpeg</item>
+                            <item name="position" xsi:type="string">center</item>
+                            <item name="label" xsi:type="string">Just Arrived</item>
+                            <item name="title" xsi:type="string">Classic Leather Shoes</item>
+                            <item name="text" xsi:type="string">Formal and casual pairs, handpicked for you.</item>
+                            <item name="button" xsi:type="string">Discover Leather Shoes</item>
+                            <item name="link" xsi:type="string">shoes.html</item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+            <block name="home.categories" template="Magento_Theme::home/categories.phtml" after="home.hero">
+                <arguments>
+                    <argument name="tiles" xsi:type="array">
+                        <item name="shirts" xsi:type="array">
+                            <item name="title" xsi:type="string">Shirts</item>
+                            <item name="link" xsi:type="string">shirt.html</item>
+                            <item name="image" xsi:type="string">images/shirt.jpg</item>
+                        </item>
+                        <item name="shoes" xsi:type="array">
+                            <item name="title" xsi:type="string">Shoes</item>
+                            <item name="link" xsi:type="string">shoes.html</item>
+                            <item name="image" xsi:type="string">images/shoes.jpg</item>
+                        </item>
+                        <item name="accessories" xsi:type="array">
+                            <item name="title" xsi:type="string">Accessories</item>
+                            <item name="link" xsi:type="string">accessories.html</item>
+                            <item name="image" xsi:type="string">images/accessories.jpg</item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+
+        <referenceBlock name="slider-1">
+            <arguments>
+                <argument name="title" xsi:type="string" translate="true">Shirts</argument>
+                <argument name="category_ids" xsi:type="string">3</argument>
+            </arguments>
+        </referenceBlock>
+        <referenceBlock name="slider-2">
+            <arguments>
+                <argument name="title" xsi:type="string" translate="true">Shoes</argument>
+                <argument name="category_ids" xsi:type="string">6</argument>
+                <argument name="price_from" xsi:type="string">0</argument>
+                <argument name="price_to" xsi:type="string">0</argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

@@ -1,0 +1,44 @@
+<?php
+/**
+ * Home page "Shop by Category" tiles.
+ *
+ * Tiles come from the layout (cms_index_index.xml), argument "tiles":
+ *  each item has title, link (URL path, e.g. "shoes.html") and image (theme image path)
+ */
+
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Escaper $escaper */
+/** @var Template $block */
+
+$tiles = (array) $block->getData('tiles');
+?>
+<section class="my-10">
+    <h2 class="text-2xl md:text-3xl font-bold text-center mb-6"><?= $escaper->escapeHtml(__('Shop by Category')) ?></h2>
+
+    <!-- 1 column on phones, 3 columns from tablet (md) up -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <?php foreach ($tiles as $tile): ?>
+            <a href="<?= $escaper->escapeUrl($block->getBaseUrl() . ltrim((string) $tile['link'], '/')) ?>"
+               class="group relative block overflow-hidden rounded-2xl aspect-4/5"
+            >
+                <img src="<?= $escaper->escapeUrl($block->getViewFileUrl((string) $tile['image'])) ?>"
+                     alt="<?= $escaper->escapeHtmlAttr(__($tile['title'])) ?>"
+                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                     loading="lazy"
+                     width="800"
+                     height="1000"
+                >
+                <!-- dark fade at the bottom so the white text is readable -->
+                <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 p-6 text-white">
+                    <h3 class="text-2xl font-bold"><?= $escaper->escapeHtml(__($tile['title'])) ?></h3>
+                    <span class="text-sm uppercase tracking-widest group-hover:underline"><?= $escaper->escapeHtml(__('Shop Now')) ?> &rarr;</span>
+                </div>
+            </a>
+        <?php endforeach; ?>
+    </div>
+</section>

@@ -1,0 +1,65 @@
+<?php
+/**
+ * Floating "Latest Shoes" banner, bottom-right on every page.
+ * The close button shrinks it to a small round button; clicking that opens it again.
+ * The open/shrunk state is remembered for the rest of the browser session.
+ *
+ * Hyvä uses the Alpine.js CSP build, so the component logic must be
+ * registered with Alpine.data() instead of written inline in x-data.
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Escaper $escaper */
+/** @var Template $block */
+/** @var HyvaCsp $hyvaCsp */
+?>
+<div x-data="floatingBanner" class="fixed bottom-4 right-4 z-50">
+    <!-- full banner -->
+    <div x-show="open"
+         x-cloak
+         class="flex items-center gap-4 px-6 py-4 md:px-8 md:py-5 rounded-full shadow-xl bg-primary text-white text-base md:text-xl"
+    >
+        <a href="<?= $escaper->escapeUrl($block->getBaseUrl() . 'shoes.html') ?>"
+           class="font-semibold hover:underline"
+        >👟 <?= $escaper->escapeHtml(__('Latest Shoes — Shop Now')) ?></a>
+        <button type="button"
+                class="text-2xl md:text-3xl leading-none pl-2"
+                aria-label="<?= $escaper->escapeHtmlAttr(__('Minimize')) ?>"
+                @click="close"
+        >&times;</button>
+    </div>
+
+    <!-- small round button shown after closing -->
+    <button type="button"
+            x-show="closed"
+            x-cloak
+            class="flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full shadow-xl bg-primary text-white text-3xl hover:scale-110 transition-transform"
+            aria-label="<?= $escaper->escapeHtmlAttr(__('Show latest shoes')) ?>"
+            @click="expand"
+    >👟</button>
+</div>
+<script>
+    window.addEventListener('alpine:init', () => Alpine.data('floatingBanner', () => ({
+        open: true,
+        get closed() {
+            return !this.open;
+        },
+        init() {
+            try { this.open = sessionStorage.getItem('floatingBannerClosed') !== '1'; } catch (e) {}
+        },
+        close() {
+            this.open = false;
+            try { sessionStorage.setItem('floatingBannerClosed', '1'); } catch (e) {}
+        },
+        expand() {
+            this.open = true;
+            try { sessionStorage.removeItem('floatingBannerClosed'); } catch (e) {}
+        }
+    })), { once: true });
+</script>
+<?php $hyvaCsp->registerInlineScript() ?>

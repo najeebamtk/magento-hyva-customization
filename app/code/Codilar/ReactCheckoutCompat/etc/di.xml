@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- PHP 8.4+ compatibility for hyva-themes/magento2-react-checkout 1.1.4 -->
+    <preference for="FriendsOfHyva\ReactCheckout\Block\CheckoutTranslator"
+                type="Codilar\ReactCheckoutCompat\Block\CheckoutTranslator"/>
+    <preference for="FriendsOfHyva\ReactCheckout\Model\Resolver\ExtensionAttribute"
+                type="Codilar\ReactCheckoutCompat\Model\Resolver\ExtensionAttribute"/>
+</config>

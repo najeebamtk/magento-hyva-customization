@@ -1,0 +1,166 @@
+<?php
+/**
+ * Home page hero slider.
+ *
+ * Slides come from the layout (cms_index_index.xml), argument "slides".
+ * Each slide item has:
+ *  - image:    theme image path, e.g. "images/home-hero.jpeg"
+ *  - position: which part of the photo to keep when it is cropped: "top" or "center" (optional, default "center")
+ *  - label, title, text, button: the texts shown on the slide
+ *  - link:     URL path the button opens, e.g. "shirt.html"
+ *
+ * The slides change by themselves every few seconds (Alpine component "heroSlider" below).
+ * Hyvä uses the Alpine.js CSP build style, so all logic lives in Alpine.data(),
+ * and the HTML only names properties/methods (no inline JS expressions).
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\ViewModel\HyvaCsp;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+/** @var Escaper $escaper */
+/** @var Template $block */
+/** @var HyvaCsp $hyvaCsp */
+
+$slides   = array_values((array) $block->getData('slides'));
+$count    = count($slides);
+$interval = 5000; // milliseconds between slides
+
+// full class names written out, so Tailwind finds them when it scans this file
+$positions = ['top' => 'object-top', 'center' => 'object-center'];
+
+if (!$count) {
+    return;
+}
+?>
+<section x-data="heroSlider"
+         data-count="<?= (int) $count ?>"
+         data-interval="<?= (int) $interval ?>"
+         @mouseenter="pause"
+         @mouseleave="play"
+         class="relative overflow-hidden rounded-2xl my-6 h-[480px] md:h-[640px] bg-slate-900"
+         aria-roledescription="carousel"
+>
+    <?php foreach ($slides as $i => $slide): ?>
+        <?php
+        $link     = $block->getBaseUrl() . ltrim((string) ($slide['link'] ?? ''), '/');
+        $position = $positions[$slide['position'] ?? 'center'] ?? 'object-center';
+        $heading  = $i === 0 ? 'h1' : 'h2'; // only one h1 per page
+        ?>
+        <!-- slide <?= (int) $i + 1 ?>: all slides sit on top of each other; only the active one is visible -->
+        <div data-index="<?= (int) $i ?>"
+             :class="slideClass"
+             class="absolute inset-0 transition-opacity duration-700 <?= $i === 0 ? 'opacity-100' : 'opacity-0 pointer-events-none' ?>"
+             aria-roledescription="slide"
+        >
+            <img src="<?= $escaper->escapeUrl($block->getViewFileUrl((string) $slide['image'])) ?>"
+                 alt="<?= $escaper->escapeHtmlAttr(__($slide['title'] ?? '')) ?>"
+                 class="absolute inset-y-0 right-0 w-full md:w-3/4 h-full object-cover <?= $escaper->escapeHtmlAttr($position) ?>"
+                 width="1920"
+                 height="1000"
+                 <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?>
+            >
+            <!-- dark on the left (behind the text), fading out over the photo -->
+            <div class="absolute inset-0 bg-black/50 md:bg-transparent md:bg-linear-to-r md:from-slate-900 md:from-35% md:via-slate-900/60 md:to-transparent"></div>
+
+            <div class="relative h-full flex flex-col justify-center px-8 md:px-16 text-white">
+                <p class="uppercase tracking-widest text-sm"><?= $escaper->escapeHtml(__($slide['label'] ?? '')) ?></p>
+                <<?= $heading ?> class="text-5xl md:text-7xl font-bold my-4 max-w-2xl"><?= $escaper->escapeHtml(__($slide['title'] ?? '')) ?></<?= $heading ?>>
+                <p class="text-lg md:text-xl max-w-md mb-8"><?= $escaper->escapeHtml(__($slide['text'] ?? '')) ?></p>
+                <a href="<?= $escaper->escapeUrl($link) ?>" class="btn btn-primary w-fit">
+                    <?= $escaper->escapeHtml(__($slide['button'] ?? 'Explore')) ?>
+                </a>
+            </div>
+        </div>
+    <?php endforeach; ?>
+
+    <?php if ($count > 1): ?>
+        <!-- controls, bottom-centre:  ←  dots  →  -->
+        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-3">
+            <button type="button" @click="prev"
+                    class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white text-xl"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Previous slide')) ?>"
+            >&larr;</button>
+
+            <!-- dots: one per slide, the active one is wider -->
+            <?php foreach ($slides as $i => $slide): ?>
+                <button type="button"
+                        data-index="<?= (int) $i ?>"
+                        @click="goTo"
+                        :class="dotClass"
+                        class="h-2.5 rounded-full transition-all <?= $i === 0 ? 'w-8 bg-white' : 'w-2.5 bg-white/50' ?>"
+                        aria-label="<?= $escaper->escapeHtmlAttr(__('Go to slide %1', $i + 1)) ?>"
+                ></button>
+            <?php endforeach; ?>
+
+            <button type="button" @click="next"
+                    class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white text-xl"
+                    aria-label="<?= $escaper->escapeHtmlAttr(__('Next slide')) ?>"
+            >&rarr;</button>
+        </div>
+    <?php endif; ?>
+</section>
+<script>
+    window.addEventListener('alpine:init', () => Alpine.data('heroSlider', () => ({
+        active: 0,      // index of the slide that is showing (0 = first)
+        count: 1,       // how many slides (read from data-count)
+        interval: 5000, // ms between slides (read from data-interval)
+        timer: null,    // the running setInterval, so we can stop it
+
+        // runs once when Alpine starts this component
+        init() {
+            this.count = Number(this.$el.dataset.count) || 1;
+            this.interval = Number(this.$el.dataset.interval) || 5000;
+            this.play();
+        },
+
+        // start the automatic sliding
+        play() {
+            this.pause(); // never run two timers at once
+            if (this.count > 1) {
+                this.timer = setInterval(() => this.next(), this.interval);
+            }
+        },
+
+        // stop the automatic sliding (mouse is over the slider)
+        pause() {
+            clearInterval(this.timer);
+            this.timer = null;
+        },
+
+        next() {
+            this.active = (this.active + 1) % this.count;              // 0 → 1 → 0 → 1 ...
+        },
+
+        prev() {
+            this.active = (this.active - 1 + this.count) % this.count; // 1 → 0 → 1 ...
+        },
+
+        // a dot was clicked: read which slide from its data-index
+        goTo(event) {
+            this.active = Number(event.currentTarget.dataset.index);
+        },
+
+        // classes for each slide: visible when it is the active one
+        slideClass() {
+            const isActive = Number(this.$el.dataset.index) === this.active;
+            return {
+                'opacity-100': isActive,
+                'opacity-0': !isActive,
+                'pointer-events-none': !isActive
+            };
+        },
+
+        // classes for each dot: long and white when active
+        dotClass() {
+            const isActive = Number(this.$el.dataset.index) === this.active;
+            return {
+                'w-8 bg-white': isActive,
+                'w-2.5 bg-white/50': !isActive
+            };
+        }
+    })), { once: true });
+</script>
+<?php $hyvaCsp->registerInlineScript() ?>
